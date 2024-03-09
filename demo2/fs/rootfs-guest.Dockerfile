@@ -9,7 +9,10 @@ apt-get update && apt-get upgrade -y
 apt-get install -y busybox-static
 
 # Install python3
-apt-get install -y python3
+apt-get install -y python3 python3-pip
+
+# Install network tools
+apt-get install -y iproute2
 
 # Make build more or less reproducible
 rm -rf /var/lib/apt/lists/* /var/log/*
@@ -24,3 +27,9 @@ EOF
 
 # Replace machine name
 RUN echo guest-machine > /etc/hostname
+
+# Add dapp
+RUN mkdir /dapp
+ADD ./.external/dapp/dapp_guest.py /dapp/dapp.py
+ADD ./.external/dapp/requirements_guest.txt /dapp/requirements.txt
+RUN pip3 install -r /dapp/requirements.txt

@@ -33,7 +33,6 @@ downloads:
 
 demo1: downloads demo1-fs demo1-inputs
 	jsonrpc-remote-cartesi-machine --server-address=localhost:8080 2>&1 &
-	#while ! netstat -ntl 2>&1 | grep 8080; do sleep 1; done
 	@sleep 3
 	cartesi-machine \
 		--ram-length=1024Mi \
@@ -50,6 +49,25 @@ demo1: downloads demo1-fs demo1-inputs
 		--rollup-advance-state=input:"build/epoch-%e-input-%i.bin",input_metadata:"build/epoch-%e-input-metadata-%i.bin",epoch_index:0,input_index_begin:1,input_index_end:2 \
 		-- "cd /dapp && /usr/sbin/rollup-init python3 dapp.py http://127.0.0.1:5004"
 
+demo2: downloads demo2-fs demo2-inputs
+	jsonrpc-remote-cartesi-machine --server-address=localhost:8080 2>&1 &
+	@sleep 3
+	cartesi-machine \
+		--ram-length=1024Mi \
+		--ram-image=downloads/linux.bin \
+		--append-init="$(HOST_INIT)" \
+		--flash-drive=label:root,filename:build/rootfs-demo2-host.ext2 \
+		--flash-drive=label:guest-root,filename:build/rootfs-demo2-guest.ext2,mount:false \
+		--no-init-splash \
+		--quiet \
+		--no-default-init \
+		--remote-address="localhost:8080" \
+		--remote-protocol="jsonrpc" \
+		--remote-shutdown \
+		--rollup-advance-state=input:"build/epoch-%e-input-%i.bin",input_metadata:"build/epoch-%e-input-metadata-%i.bin",epoch_index:0,input_index_begin:1,input_index_end:2 \
+		--rollup-inspect-state=query:"build/query.bin" \
+		-- "cd /dapp && /bin/sh entrypoint.sh"
+
 clean:
 	rm -rf build downloads deps/tools/.external deps/tools/fs/rootfs-demo* *.bin
 
@@ -58,7 +76,8 @@ help:
 	@echo '  submodules      - checkout submodules'
 	@echo '  downloads       - download the necessary files'
 	@echo '  demo1           - execute demo1: pass a python program as an input and execute it inside the hypervisor'
+	@echo '  demo2           - execute demo2: host program controls the output of the guest program'
 	@echo '  help            - list makefile commands'
 	@echo '  clean           - remove the generated artifacts'
 
-.PHONY: demo1 help
+.PHONY: demo1 demo2 help
